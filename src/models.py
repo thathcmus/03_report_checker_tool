@@ -43,7 +43,7 @@ class RubricScores:
         }
         for field_name, (min_val, max_val) in limits.items():
             val = getattr(self, field_name)
-            if not isinstance(val, (int, float)) or val < min_val or val > max_val:
+            if isinstance(val, bool) or not isinstance(val, (int, float)) or val < min_val or val > max_val:
                 raise ValueError(
                     f"{field_name} must be between {min_val} and {max_val}, got {val}"
                 )
@@ -99,6 +99,7 @@ class StandupReport:
     strengths: list[str] = field(default_factory=list)
     weaknesses: list[str] = field(default_factory=list)
     suggested_script: str = ""
+    audio_quality: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.id:
@@ -111,6 +112,8 @@ class StandupReport:
             self.strengths = list(self.strengths)
         if not isinstance(self.weaknesses, list):
             self.weaknesses = list(self.weaknesses)
+        if not isinstance(self.audio_quality, dict):
+            self.audio_quality = dict(self.audio_quality) if self.audio_quality else {}
 
     @property
     def total_score(self) -> int:
@@ -132,6 +135,7 @@ class StandupReport:
             "strengths": list(self.strengths),
             "weaknesses": list(self.weaknesses),
             "suggested_script": self.suggested_script,
+            "audio_quality": dict(self.audio_quality) if self.audio_quality else {},
         }
 
     @classmethod
@@ -157,6 +161,7 @@ class StandupReport:
             strengths=list(data.get("strengths", [])),
             weaknesses=list(data.get("weaknesses", [])),
             suggested_script=str(data.get("suggested_script", "")),
+            audio_quality=dict(data.get("audio_quality", {})),
         )
 
 

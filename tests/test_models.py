@@ -29,6 +29,14 @@ def test_rubric_scores_validation_negative():
         RubricScores(15, 15, 10, 10, 10, -1)
 
 
+def test_rubric_scores_validation_boolean():
+    with pytest.raises(ValueError, match="process_and_jira"):
+        RubricScores(True, 15, 10, 10, 10, 10)  # type: ignore
+
+    with pytest.raises(ValueError, match="clarity_and_conciseness"):
+        RubricScores(15, False, 10, 10, 10, 10)  # type: ignore
+
+
 def test_rubric_scores_to_dict_and_from_dict():
     scores = RubricScores(18, 16, 14, 13, 12, 12)
     data = scores.to_dict()
@@ -58,12 +66,14 @@ def test_standup_report_serialization():
         filler_words_count=3,
         strengths=["Mở đầu tốt, dẫn dắt Jira rõ ràng"],
         weaknesses=["Hơi ngắc ngứ đoạn giải thích bug"],
-        suggested_script="Chào mọi người, trên ticket PROJ-123..."
+        suggested_script="Chào mọi người, trên ticket PROJ-123...",
+        audio_quality={"volume": "optimal", "noise": "clean", "note": "Âm thanh rõ, mic tốt"}
     )
     data = report.to_dict()
     assert data["total_score"] == 85
     assert data["scores"]["process_and_jira"] == 18
     assert data["closing_confirmed"] is True
+    assert data["audio_quality"]["volume"] == "optimal"
 
 
 def test_standup_report_deserialization():
@@ -85,7 +95,11 @@ def test_standup_report_deserialization():
         "filler_words_count": 5,
         "strengths": ["Tự tin"],
         "weaknesses": ["Thiếu câu chốt"],
-        "suggested_script": "Em đã report xong..."
+        "suggested_script": "Em đã report xong...",
+        "audio_quality": {
+            "volume": "too_quiet",
+            "noise": "moderate"
+        }
     }
     report = StandupReport.from_dict(raw_data)
     assert report.id == "report-002"
@@ -94,6 +108,7 @@ def test_standup_report_deserialization():
     assert report.scores.process_and_jira == 15
     assert report.closing_confirmed is False
     assert report.strengths == ["Tự tin"]
+    assert report.audio_quality["volume"] == "too_quiet"
 
 
 def test_standup_report_defaults():
@@ -108,6 +123,7 @@ def test_standup_report_defaults():
     assert report.closing_confirmed is False
     assert report.strengths == []
     assert report.weaknesses == []
+    assert report.audio_quality == {}
 
 
 def test_history_store_roundtrip():
