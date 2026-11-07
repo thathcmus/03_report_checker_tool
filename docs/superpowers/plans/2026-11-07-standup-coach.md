@@ -65,6 +65,7 @@ def test_standup_report_serialization():
         closing_confirmed=True,
         scores=scores,
         filler_words_count=3,
+        audio_quality={"volume": "optimal", "noise": "clean", "note": "Âm thanh rõ, mic tốt"},
         strengths=["Mở đầu tốt, dẫn dắt Jira rõ ràng"],
         weaknesses=["Hơi ngắc ngứ đoạn giải thích bug"],
         suggested_script="Chào mọi người, trên ticket PROJ-123..."
@@ -73,6 +74,7 @@ def test_standup_report_serialization():
     assert data["total_score"] == 85
     assert data["scores"]["process_and_jira"] == 18
     assert data["closing_confirmed"] is True
+    assert data["audio_quality"]["volume"] == "optimal"
 ```
 
 - [ ] **Step 2: Run test to verify it fails**

@@ -81,6 +81,18 @@ Dự án **StandupCoach** là một trợ lý ảo cá nhân tích hợp trực 
 - **6. Kiểm soát từ đệm & Tính chuyên nghiệp (15 điểm):**
   - Hạn chế tối đa các từ đệm: "à", "ừm", "kiểu như", "thì là mà", các âm kéo dài khi đang suy nghĩ. Cứ mỗi 2 từ đệm trừ 1-2 điểm.
 
+### 5.3. Đánh giá chất lượng kỹ thuật Microphone & Môi trường (Hardware & Noise Diagnostic)
+Bên cạnh 6 tiêu chí kỹ năng nói, hệ thống đánh giá thêm chất lượng âm học phần cứng:
+- **Âm lượng Micro (Volume level)**:
+  - *Chuẩn (Optimal)*: Âm lượng rõ ràng, vừa phải.
+  - *Quá bé (Too quiet)*: Cảnh báo mic thu quá nhỏ, người nghe phải căng tai hoặc vặn max loa; gợi ý tăng mic gain hoặc đưa mic gần miệng hơn.
+  - *Quá lớn/Rè (Clipping)*: Bị méo tiếng do gain quá cao.
+- **Tạp âm môi trường (Background Noise level)**:
+  - *Sạch (Clean)*: Không gian yên tĩnh.
+  - *Ồn vừa phải (Moderate)*: Có tiếng gõ phím lạch cạch, tiếng quạt gió hoặc tiếng thì thầm xung quanh.
+  - *Quá ồn (Too noisy)*: Tiếng ồn môi trường làm át giọng nói; khuyến nghị đeo tai nghe chống ồn hoặc đổi vị trí ngồi.
+Chỉ số này được hiển thị dưới dạng badge chẩn đoán kỹ thuật trong báo cáo và không trừ vào điểm kỹ năng nói (hoặc cảnh báo riêng) để người dùng phân biệt rõ giữa lỗi kỹ năng và lỗi thiết bị.
+
 ### 5.3. Nhận diện kết thúc
 - Skill kiểm tra xem bài report có kết thúc bằng câu chuyển giao / đóng phiên hay không (ví dụ: *"em đã report xong, mời anh/chị... tiếp theo"*). Nếu thiếu, nhắc nhở và trừ nhẹ điểm chuyên nghiệp (1-2 điểm).
 
