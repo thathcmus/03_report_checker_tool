@@ -66,7 +66,7 @@ def ingest_payload(
     html_path: Path,
     artifact_path: Path,
     open_browser: bool = False,
-) -> StandupReport:
+) -> tuple[StandupReport, HistoryManager]:
     """Ingest evaluation payload, update history store, and generate reports."""
     if not payload_path.exists():
         sys.stderr.write(f"Error: Payload file not found: {payload_path}\n")
@@ -115,7 +115,7 @@ def ingest_payload(
         print(f"Opening dashboard in browser: {target_uri}")
         webbrowser.open(target_uri)
 
-    return report
+    return report, history_mgr
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -170,8 +170,9 @@ def main() -> None:
         parser.print_help()
         sys.exit(0)
 
+    history_mgr: HistoryManager | None = None
     if args.add:
-        ingest_payload(
+        report, history_mgr = ingest_payload(
             payload_path=args.add,
             history_path=args.history_path,
             html_path=args.html_path,
@@ -180,7 +181,8 @@ def main() -> None:
         )
 
     if args.show_trend:
-        history_mgr = HistoryManager(file_path=args.history_path)
+        if history_mgr is None:
+            history_mgr = HistoryManager(file_path=args.history_path)
         trend = history_mgr.calculate_trend()
         print_trend_summary(trend)
 

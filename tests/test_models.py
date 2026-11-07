@@ -143,3 +143,74 @@ def test_history_store_roundtrip():
     assert len(loaded_store.reports) == 1
     assert loaded_store.reports[0].id == "rep-1"
     assert loaded_store.reports[0].total_score == 85
+
+
+def test_rubric_scores_from_dict_null_safety():
+    """Verify RubricScores.from_dict handles None/null values gracefully."""
+    null_data = {
+        "process_and_jira": None,
+        "clarity_and_conciseness": None,
+        "pronunciation_and_terms": None,
+        "cohesion_and_flow": None,
+        "pacing_and_pauses": None,
+        "filler_words_control": None,
+    }
+    scores = RubricScores.from_dict(null_data)
+    assert scores.process_and_jira == 0
+    assert scores.clarity_and_conciseness == 0
+    assert scores.pronunciation_and_terms == 0
+    assert scores.cohesion_and_flow == 0
+    assert scores.pacing_and_pauses == 0
+    assert scores.filler_words_control == 0
+    assert scores.total == 0
+
+    # Also test empty dict and None
+    assert RubricScores.from_dict({}).total == 0
+    assert RubricScores.from_dict(None).total == 0  # type: ignore
+
+
+def test_standup_report_from_dict_null_safety():
+    """Verify StandupReport.from_dict guards against None/null values from LLM payloads."""
+    null_payload = {
+        "id": None,
+        "timestamp": None,
+        "audio_file": None,
+        "duration_seconds": None,
+        "wpm": None,
+        "closing_confirmed": None,
+        "scores": {
+            "process_and_jira": None,
+            "clarity_and_conciseness": None,
+            "pronunciation_and_terms": None,
+            "cohesion_and_flow": None,
+            "pacing_and_pauses": None,
+            "filler_words_control": None,
+        },
+        "filler_words_count": None,
+        "strengths": None,
+        "weaknesses": None,
+        "suggested_script": None,
+        "audio_quality": None,
+    }
+    report = StandupReport.from_dict(null_payload)
+    assert report.id.startswith("report-")
+    assert report.timestamp != ""
+    assert report.audio_file == ""
+    assert report.duration_seconds == 0
+    assert report.wpm == 0
+    assert report.closing_confirmed is False
+    assert report.total_score == 0
+    assert report.filler_words_count == 0
+    assert report.strengths == []
+    assert report.weaknesses == []
+    assert report.suggested_script == ""
+    assert report.audio_quality == {}
+
+    # None scores entirely
+    report_none_scores = StandupReport.from_dict({"scores": None})
+    assert report_none_scores.total_score == 0
+    assert isinstance(report_none_scores.scores, RubricScores)
+
+    # Empty and None input
+    assert StandupReport.from_dict({}).total_score == 0
+    assert StandupReport.from_dict(None).total_score == 0  # type: ignore

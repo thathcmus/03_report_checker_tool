@@ -158,7 +158,7 @@ def test_cli_open_browser_flag(tmp_path: Path, sample_payload: dict) -> None:
     payload_file.write_text(json.dumps(sample_payload), encoding="utf-8")
 
     with patch("webbrowser.open") as mock_open:
-        report = ingest_payload(
+        report, history_mgr = ingest_payload(
             payload_path=payload_file,
             history_path=history_file,
             html_path=html_out,
@@ -166,6 +166,7 @@ def test_cli_open_browser_flag(tmp_path: Path, sample_payload: dict) -> None:
             open_browser=True,
         )
         assert report is not None
+        assert history_mgr is not None
         assert mock_open.called
         opened_arg = mock_open.call_args[0][0]
         assert str(html_out.resolve().as_uri()) == opened_arg
@@ -217,3 +218,35 @@ def test_record_script_missing_duration_error() -> None:
     res = subprocess.run(cmd, capture_output=True, text=True)
     assert res.returncode != 0
     assert "requires specifying --duration" in res.stderr.lower()
+
+
+def test_cli_combined_add_and_show_trend(tmp_path: Path, sample_payload: dict) -> None:
+    """Test CLI handles both --add and --show-trend in one run, reusing history_mgr."""
+    history_file = tmp_path / "standup_history.json"
+    html_out = tmp_path / "standup_dashboard.html"
+    artifact_out = tmp_path / "latest_artifact.md"
+    payload_file = tmp_path / "payload.json"
+    payload_file.write_text(json.dumps(sample_payload), encoding="utf-8")
+
+    cmd = [
+        sys.executable,
+        "scripts/report_manager.py",
+        "--add",
+        str(payload_file),
+        "--history-path",
+        str(history_file),
+        "--html-path",
+        str(html_out),
+        "--artifact-path",
+        str(artifact_out),
+        "--show-trend",
+    ]
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    assert res.returncode == 0, f"CLI stderr: {res.stderr}"
+    # Ingestion message
+    assert "StandupCoach: Evaluation saved successfully" in res.stdout
+    assert "Session ID:" in res.stdout
+    # Trend summary message
+    assert "StandupCoach Performance Trend Summary" in res.stdout
+    assert "Total Sessions:   1" in res.stdout
+    assert "Average Score:" in res.stdout

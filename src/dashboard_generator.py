@@ -63,29 +63,12 @@ CRITERIA_DEFINITIONS: list[dict[str, Any]] = [
 
 
 def _extract_recent_reports(
-    report: StandupReport, recent_reports: Any = None, limit: int = 10
+    report: StandupReport,
+    recent_reports: Any = None,
+    limit: int = 10,
 ) -> list[StandupReport]:
-    """Helper to extract a list of recent reports from list, HistoryManager, or default."""
-    if recent_reports is None:
-        return [report]
-
-    # If it's a HistoryManager or duck-typed object with get_recent_reports
-    if hasattr(recent_reports, "get_recent_reports") and callable(recent_reports.get_recent_reports):
-        items = recent_reports.get_recent_reports(limit=limit)
-        return items if items else [report]
-
-    # If it has reports attribute (e.g. HistoryStore)
-    if hasattr(recent_reports, "reports") and isinstance(recent_reports.reports, list):
-        items = recent_reports.reports[-limit:]
-        return items if items else [report]
-
-    # If it's a list
-    if isinstance(recent_reports, list):
-        if not recent_reports:
-            return [report]
-        return recent_reports[-limit:]
-
-    return [report]
+    """Module-level compatibility helper for extracting recent reports."""
+    return DashboardGenerator._extract_recent_reports(report, recent_reports, limit=limit)
 
 
 def _format_audio_quality(audio_quality: dict[str, Any]) -> tuple[str, str]:
@@ -109,10 +92,43 @@ class DashboardGenerator:
     """Generates markdown artifacts and standalone HTML visualizers for standup evaluations."""
 
     @classmethod
+    def _extract_recent_reports(
+        cls,
+        report: StandupReport,
+        recent_reports: Any = None,
+        limit: int = 10,
+    ) -> list[StandupReport]:
+        """Extract a list of recent reports from list, HistoryManager, or default.
+
+        If recent_reports does not already contain a report with r.id == report.id,
+        appends report so the active report is always reflected as the latest point
+        in the trend chart, then returns reports[-limit:].
+        """
+        reports: list[StandupReport] = []
+        if recent_reports is None:
+            reports = []
+        elif hasattr(recent_reports, "get_recent_reports") and callable(recent_reports.get_recent_reports):
+            items = recent_reports.get_recent_reports(limit=limit)
+            reports = list(items) if items else []
+        elif hasattr(recent_reports, "reports") and isinstance(recent_reports.reports, list):
+            reports = list(recent_reports.reports)
+        elif isinstance(recent_reports, list):
+            reports = list(recent_reports)
+        else:
+            reports = []
+
+        if not any(getattr(r, "id", None) == report.id for r in reports):
+            reports.append(report)
+
+        return reports[-limit:] if limit > 0 else []
+
+    @classmethod
     def generate_markdown_artifact(
         cls,
         report: StandupReport,
         recent_reports: Any = None,
+        history: Any = None,
+        **kwargs: Any,
     ) -> str:
         """Generate Antigravity-native Markdown Artifact.
 
@@ -124,7 +140,10 @@ class DashboardGenerator:
         - Audio Quality diagnostics
         - Strengths, Weaknesses, and Suggested Script Rewrite
         """
-        history_list = _extract_recent_reports(report, recent_reports, limit=10)
+        if recent_reports is None and history is not None:
+            recent_reports = history
+
+        history_list = cls._extract_recent_reports(report, recent_reports, limit=10)
         vol_label, noise_label = _format_audio_quality(report.audio_quality)
 
         total_score = report.total_score
@@ -186,7 +205,8 @@ class DashboardGenerator:
             weaknesses_md = "- *(Không có điểm yếu nghiêm trọng)*"
 
         # Suggested script
-        script_md = report.suggested_script.strip() if report.suggested_script else "*(Không có kịch bản gợi ý)*"
+        script_raw = report.suggested_script.strip() if report.suggested_script else "*(Không có kịch bản gợi ý)*"
+        script_md = "\n> ".join(script_raw.splitlines())
 
         # Closing confirmation message
         closing_msg = (
@@ -254,6 +274,8 @@ class DashboardGenerator:
         cls,
         report: StandupReport,
         recent_reports: Any = None,
+        history: Any = None,
+        **kwargs: Any,
     ) -> str:
         """Generate Standalone HTML Visualizer with Chart.js Radar and Line charts.
 
@@ -265,7 +287,10 @@ class DashboardGenerator:
         - Detailed breakdown table and expandable script card
         - Works completely offline / via file:// protocol
         """
-        history_list = _extract_recent_reports(report, recent_reports, limit=10)
+        if recent_reports is None and history is not None:
+            recent_reports = history
+
+        history_list = cls._extract_recent_reports(report, recent_reports, limit=10)
         vol_label, noise_label = _format_audio_quality(report.audio_quality)
 
         total_score = report.total_score

@@ -74,13 +74,15 @@ class RubricScores:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RubricScores:
         """Construct RubricScores from dictionary."""
+        if not data or not isinstance(data, dict):
+            return cls()
         return cls(
-            process_and_jira=int(data.get("process_and_jira", 0)),
-            clarity_and_conciseness=int(data.get("clarity_and_conciseness", 0)),
-            pronunciation_and_terms=int(data.get("pronunciation_and_terms", 0)),
-            cohesion_and_flow=int(data.get("cohesion_and_flow", 0)),
-            pacing_and_pauses=int(data.get("pacing_and_pauses", 0)),
-            filler_words_control=int(data.get("filler_words_control", 0)),
+            process_and_jira=int(data.get("process_and_jira") or 0),
+            clarity_and_conciseness=int(data.get("clarity_and_conciseness") or 0),
+            pronunciation_and_terms=int(data.get("pronunciation_and_terms") or 0),
+            cohesion_and_flow=int(data.get("cohesion_and_flow") or 0),
+            pacing_and_pauses=int(data.get("pacing_and_pauses") or 0),
+            filler_words_control=int(data.get("filler_words_control") or 0),
         )
 
 
@@ -141,7 +143,10 @@ class StandupReport:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> StandupReport:
         """Construct StandupReport from dictionary."""
-        scores_raw = data.get("scores", {})
+        if not data or not isinstance(data, dict):
+            return cls()
+
+        scores_raw = data.get("scores")
         if isinstance(scores_raw, dict):
             scores = RubricScores.from_dict(scores_raw)
         elif isinstance(scores_raw, RubricScores):
@@ -150,18 +155,18 @@ class StandupReport:
             scores = RubricScores()
 
         return cls(
-            id=data.get("id", ""),
-            timestamp=data.get("timestamp", ""),
-            audio_file=data.get("audio_file", ""),
-            duration_seconds=int(data.get("duration_seconds", 0)),
-            wpm=int(data.get("wpm", 0)),
-            closing_confirmed=bool(data.get("closing_confirmed", False)),
+            id=str(data.get("id") or ""),
+            timestamp=str(data.get("timestamp") or ""),
+            audio_file=str(data.get("audio_file") or ""),
+            duration_seconds=int(data.get("duration_seconds") or 0),
+            wpm=int(data.get("wpm") or 0),
+            closing_confirmed=bool(data.get("closing_confirmed") or False),
             scores=scores,
-            filler_words_count=int(data.get("filler_words_count", 0)),
-            strengths=list(data.get("strengths", [])),
-            weaknesses=list(data.get("weaknesses", [])),
-            suggested_script=str(data.get("suggested_script", "")),
-            audio_quality=dict(data.get("audio_quality", {})),
+            filler_words_count=int(data.get("filler_words_count") or 0),
+            strengths=list(data.get("strengths") or []),
+            weaknesses=list(data.get("weaknesses") or []),
+            suggested_script=str(data.get("suggested_script") or ""),
+            audio_quality=dict(data.get("audio_quality") or {}),
         )
 
 
@@ -183,7 +188,7 @@ class HistoryStore:
         if isinstance(data, list):
             reports_raw = data
         elif isinstance(data, dict):
-            reports_raw = data.get("reports", [])
+            reports_raw = data.get("reports") or []
         else:
             reports_raw = []
-        return cls(reports=[StandupReport.from_dict(r) for r in reports_raw])
+        return cls(reports=[StandupReport.from_dict(r) for r in reports_raw if isinstance(r, dict)])

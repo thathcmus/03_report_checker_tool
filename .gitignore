@@ -1,3 +1,15 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Audio recordings
+records/*.wav
+records/*.mp3
+records/*.m4a
+
+# Generated reports & dashboards
+reports/*.html
+reports/*.md
+
+# History data
+data/*.json

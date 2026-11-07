@@ -152,3 +152,44 @@ def test_recent_reports_truncates_to_last_10():
     # Should only have Session 1 to Session 10 in html
     assert '"Session 10"' in html
     assert '"Session 11"' not in html
+
+
+def test_active_report_appended_when_not_in_recent_reports():
+    """Verify active report is appended as the latest point if not already present."""
+    r1 = StandupReport(id="old-1", scores=RubricScores(10, 10, 10, 10, 10, 10))
+    r2 = StandupReport(id="old-2", scores=RubricScores(12, 12, 12, 12, 12, 12))
+    active = StandupReport(id="active-new", scores=RubricScores(15, 15, 15, 15, 15, 15))
+
+    md = DashboardGenerator.generate_markdown_artifact(active, recent_reports=[r1, r2])
+    html = DashboardGenerator.generate_html_dashboard(active, recent_reports=[r1, r2])
+
+    # 3 sessions: S1, S2, S3
+    assert '"S3"' in md
+    assert '"Session 3"' in html
+    # Active report score 90 should be the last value
+    assert "line [60, 72, 90]" in md
+    assert "[60, 72, 90]" in html
+
+
+def test_history_keyword_alias(sample_report):
+    """Verify 'history' keyword alias works identically to 'recent_reports'."""
+    md = DashboardGenerator.generate_markdown_artifact(sample_report, history=[sample_report])
+    html = DashboardGenerator.generate_html_dashboard(sample_report, history=[sample_report])
+
+    assert "# 🎙️ StandupCoach Evaluation Report" in md
+    assert "<!DOCTYPE html>" in html
+    assert "88 / 100" in md
+
+
+def test_suggested_script_multiparagraph_blockquote():
+    """Verify multi-paragraph suggested scripts stay cleanly within markdown blockquotes."""
+    report = StandupReport(
+        id="rep-multi",
+        scores=RubricScores(15, 15, 12, 12, 12, 12),
+        suggested_script="Đoạn 1: Mở đầu Jira.\n\nĐoạn 2: Hôm qua và hôm nay.\nĐoạn 3: Kết thúc chuyển giao.",
+    )
+    md = DashboardGenerator.generate_markdown_artifact(report)
+
+    assert "> Đoạn 1: Mở đầu Jira." in md
+    assert "> \n> Đoạn 2: Hôm qua và hôm nay." in md
+    assert "> Đoạn 3: Kết thúc chuyển giao." in md
