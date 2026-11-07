@@ -250,3 +250,60 @@ def test_cli_combined_add_and_show_trend(tmp_path: Path, sample_payload: dict) -
     assert "StandupCoach Performance Trend Summary" in res.stdout
     assert "Total Sessions:   1" in res.stdout
     assert "Average Score:" in res.stdout
+
+
+def test_cli_standalone_open_browser(tmp_path: Path, sample_payload: dict) -> None:
+    """Test running report_manager.py --open-browser standalone without --add opens dashboard."""
+    from scripts.report_manager import ingest_payload, main
+
+    history_file = tmp_path / "standup_history.json"
+    html_out = tmp_path / "standup_dashboard.html"
+    artifact_out = tmp_path / "latest_artifact.md"
+    payload_file = tmp_path / "payload.json"
+    payload_file.write_text(json.dumps(sample_payload), encoding="utf-8")
+
+    ingest_payload(
+        payload_path=payload_file,
+        history_path=history_file,
+        html_path=html_out,
+        artifact_path=artifact_out,
+        open_browser=False,
+    )
+    # Remove HTML file to verify standalone --open-browser can also regenerate from history if needed
+    html_out.unlink()
+
+    with patch("webbrowser.open") as mock_open, patch(
+        "sys.argv",
+        [
+            "report_manager.py",
+            "--open-browser",
+            "--history-path",
+            str(history_file),
+            "--html-path",
+            str(html_out),
+        ],
+    ):
+        main()
+        assert html_out.exists()
+        assert mock_open.called
+        assert mock_open.call_args[0][0] == str(html_out.resolve().as_uri())
+
+
+def test_record_audio_stops_fallback_when_stop_event_already_set(tmp_path: Path) -> None:
+    """Verify fallback backends are not called if user already triggered stop_event."""
+    import scripts.record as rec
+
+    target_wav = tmp_path / "stopped.wav"
+
+    def fake_first_backend(out_path, stop_event, sample_rate, channels, duration):
+        stop_event.set()  # User pressed Enter during first backend
+        return False
+
+    with patch.object(rec, "_record_with_sounddevice", side_effect=fake_first_backend), patch.object(
+        rec, "_record_with_pyaudio"
+    ) as mock_pyaudio, patch.object(rec, "_record_with_winmm") as mock_winmm:
+        with pytest.raises(SystemExit):
+            rec.record_audio(output_file=target_wav, duration=0.1, interactive=False)
+        assert not mock_pyaudio.called
+        assert not mock_winmm.called
+

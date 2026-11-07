@@ -233,6 +233,8 @@ def record_audio(
     start_record_time = time.time()
 
     for backend_fn in (_record_with_sounddevice, _record_with_pyaudio, _record_with_winmm):
+        if stop_event.is_set():
+            break
         if backend_fn(out_path, stop_event, sample_rate, channels, duration):
             recorded = True
             break

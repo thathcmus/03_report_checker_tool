@@ -193,3 +193,22 @@ def test_suggested_script_multiparagraph_blockquote():
     assert "> Đoạn 1: Mở đầu Jira." in md
     assert "> \n> Đoạn 2: Hôm qua và hôm nay." in md
     assert "> Đoạn 3: Kết thúc chuyển giao." in md
+
+
+def test_dashboard_renders_audio_quality_note():
+    """Verify audio_quality['note'] is rendered in both Markdown Artifact and HTML Dashboard."""
+    report = StandupReport(
+        id="rep-note",
+        scores=RubricScores(18, 17, 14, 13, 14, 12),
+        audio_quality={
+            "volume": "Optimal",
+            "noise": "Clean",
+            "note": "Mic thu rõ, không bị vang phòng.",
+        },
+    )
+    md = DashboardGenerator.generate_markdown_artifact(report)
+    html = DashboardGenerator.generate_html_dashboard(report)
+
+    assert "Mic thu rõ, không bị vang phòng." in md
+    assert "Mic thu rõ, không bị vang phòng." in html
+

@@ -166,7 +166,7 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    if not args.add and not args.show_trend:
+    if not args.add and not args.show_trend and not args.open_browser:
         parser.print_help()
         sys.exit(0)
 
@@ -185,6 +185,21 @@ def main() -> None:
             history_mgr = HistoryManager(file_path=args.history_path)
         trend = history_mgr.calculate_trend()
         print_trend_summary(trend)
+
+    if args.open_browser and not args.add:
+        if not args.html_path.exists():
+            if history_mgr is None:
+                history_mgr = HistoryManager(file_path=args.history_path)
+            recent = history_mgr.get_recent_reports(limit=10)
+            if not recent:
+                sys.stderr.write(f"Error: Dashboard file not found and history is empty: {args.html_path}\n")
+                sys.exit(1)
+            html_content = DashboardGenerator.generate_html_dashboard(recent[-1], history_mgr)
+            args.html_path.parent.mkdir(parents=True, exist_ok=True)
+            args.html_path.write_text(html_content, encoding="utf-8")
+        target_uri = args.html_path.resolve().as_uri()
+        print(f"Opening dashboard in browser: {target_uri}")
+        webbrowser.open(target_uri)
 
 
 if __name__ == "__main__":

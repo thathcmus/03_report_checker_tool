@@ -32,10 +32,16 @@
 
 ```text
 03_report_checker_tool/
+├── .agents/
+│   └── skills/
+│       ├── push/
+│       │   └── SKILL.md            # Git push skill (/push)
+│       └── standup-coach/
+│           └── SKILL.md            # Antigravity Custom Skill prompt & Persona
 ├── .gemini/
 │   └── skills/
 │       └── standup-coach/
-│           └── SKILL.md            # Antigravity Custom Skill prompt & Persona
+│           └── SKILL.md            # Bản đồng bộ Skill cho tương thích đa cấu hình
 ├── docs/
 │   └── superpowers/
 │       ├── specs/                  # Tài liệu thiết kế kỹ thuật (Design Doc)
@@ -123,7 +129,7 @@ Dự án được xây dựng theo phương pháp TDD với kiểm thử phủ t
 ```powershell
 python -m pytest tests -v
 ```
-*(Kết quả: 41/41 unit & integration tests pass 100% trong ~2.5 giây).*
+*(Kết quả: 46/46 unit & integration tests pass 100% trong ~2.5 giây).*
 
 ---
 

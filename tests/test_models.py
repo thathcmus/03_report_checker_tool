@@ -214,3 +214,31 @@ def test_standup_report_from_dict_null_safety():
     # Empty and None input
     assert StandupReport.from_dict({}).total_score == 0
     assert StandupReport.from_dict(None).total_score == 0  # type: ignore
+
+
+def test_rubric_scores_float_normalization():
+    """Verify float values in RubricScores are normalized to int consistently across total and to_dict."""
+    scores = RubricScores(14.6, 14.6, 10, 10, 10, 10)  # type: ignore
+    assert isinstance(scores.process_and_jira, int)
+    assert isinstance(scores.clarity_and_conciseness, int)
+    assert scores.process_and_jira == 15
+    assert scores.clarity_and_conciseness == 15
+    assert scores.total == 70
+    assert RubricScores.from_dict(scores.to_dict()).total == scores.total
+
+    from_float_str = RubricScores.from_dict({"process_and_jira": "15.6", "clarity_and_conciseness": 14.4})
+    assert from_float_str.process_and_jira == 16
+    assert from_float_str.clarity_and_conciseness == 14
+
+
+def test_standup_report_negative_metrics_validation():
+    """Verify negative duration_seconds, wpm, or filler_words_count raises ValueError."""
+    with pytest.raises(ValueError, match="duration_seconds"):
+        StandupReport(duration_seconds=-1)
+
+    with pytest.raises(ValueError, match="wpm"):
+        StandupReport(wpm=-10)
+
+    with pytest.raises(ValueError, match="filler_words_count"):
+        StandupReport(filler_words_count=-2)
+

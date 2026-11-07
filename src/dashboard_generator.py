@@ -145,6 +145,8 @@ class DashboardGenerator:
 
         history_list = cls._extract_recent_reports(report, recent_reports, limit=10)
         vol_label, noise_label = _format_audio_quality(report.audio_quality)
+        audio_note = str(report.audio_quality.get("note") or "").strip() if report.audio_quality else ""
+        audio_note_md = f"\n> - **Ghi chú (Note):** {audio_note}" if audio_note else ""
 
         total_score = report.total_score
         status_tag = "✅ Đạt chuẩn" if total_score >= 80 else "⚠️ Cần cải thiện"
@@ -230,7 +232,7 @@ class DashboardGenerator:
 > [!{audio_alert_type}]
 > **Hardware & Noise Diagnostic (Chất lượng Mic & Môi trường):**
 > - **Âm lượng Micro (Volume):** `{vol_label}` *(Chuẩn: Optimal)*
-> - **Tạp âm nền (Background Noise):** `{noise_label}` *(Chuẩn: Clean)*
+> - **Tạp âm nền (Background Noise):** `{noise_label}` *(Chuẩn: Clean)*{audio_note_md}
 > *(Lưu ý: Chỉ số phần cứng nhằm hỗ trợ điều chỉnh mic, không trừ điểm kỹ năng nói).*
 
 ---
@@ -292,6 +294,8 @@ class DashboardGenerator:
 
         history_list = cls._extract_recent_reports(report, recent_reports, limit=10)
         vol_label, noise_label = _format_audio_quality(report.audio_quality)
+        audio_note = str(report.audio_quality.get("note") or "").strip() if report.audio_quality else ""
+        audio_note_md = f"\n> - **Ghi chú (Note):** {audio_note}" if audio_note else ""
 
         total_score = report.total_score
         scores_obj = report.scores
@@ -353,6 +357,12 @@ class DashboardGenerator:
         # Audio Quality badge styling
         vol_class = "badge-success" if vol_label.lower() == "optimal" else "badge-warning"
         noise_class = "badge-success" if noise_label.lower() == "clean" else "badge-warning"
+        audio_note = str(report.audio_quality.get("note") or "").strip() if report.audio_quality else ""
+        audio_note_html = (
+            f'<span class="diagnostic-label" style="text-transform: none;">({html.escape(audio_note)})</span>'
+            if audio_note
+            else ""
+        )
 
         closing_text = "✅ Đã xác nhận" if report.closing_confirmed else "⚠️ Chưa có"
 
@@ -618,6 +628,7 @@ class DashboardGenerator:
                 <span class="diagnostic-label">Micro & Noise:</span>
                 <span class="badge {vol_class}">Mic: {html.escape(vol_label)}</span>
                 <span class="badge {noise_class}">Noise: {html.escape(noise_label)}</span>
+                {audio_note_html}
             </div>
         </header>
 

@@ -47,6 +47,7 @@ class RubricScores:
                 raise ValueError(
                     f"{field_name} must be between {min_val} and {max_val}, got {val}"
                 )
+            setattr(self, field_name, int(round(val)))
 
     @property
     def total(self) -> int:
@@ -76,13 +77,19 @@ class RubricScores:
         """Construct RubricScores from dictionary."""
         if not data or not isinstance(data, dict):
             return cls()
+
+        def _to_int(val: Any) -> int:
+            if val is None or val == "":
+                return 0
+            return int(round(float(val)))
+
         return cls(
-            process_and_jira=int(data.get("process_and_jira") or 0),
-            clarity_and_conciseness=int(data.get("clarity_and_conciseness") or 0),
-            pronunciation_and_terms=int(data.get("pronunciation_and_terms") or 0),
-            cohesion_and_flow=int(data.get("cohesion_and_flow") or 0),
-            pacing_and_pauses=int(data.get("pacing_and_pauses") or 0),
-            filler_words_control=int(data.get("filler_words_control") or 0),
+            process_and_jira=_to_int(data.get("process_and_jira")),
+            clarity_and_conciseness=_to_int(data.get("clarity_and_conciseness")),
+            pronunciation_and_terms=_to_int(data.get("pronunciation_and_terms")),
+            cohesion_and_flow=_to_int(data.get("cohesion_and_flow")),
+            pacing_and_pauses=_to_int(data.get("pacing_and_pauses")),
+            filler_words_control=_to_int(data.get("filler_words_control")),
         )
 
 
@@ -116,6 +123,11 @@ class StandupReport:
             self.weaknesses = list(self.weaknesses)
         if not isinstance(self.audio_quality, dict):
             self.audio_quality = dict(self.audio_quality) if self.audio_quality else {}
+        for metric_field in ("duration_seconds", "wpm", "filler_words_count"):
+            val = getattr(self, metric_field)
+            if isinstance(val, bool) or not isinstance(val, (int, float)) or val < 0:
+                raise ValueError(f"{metric_field} must be a non-negative number, got {val}")
+            setattr(self, metric_field, int(round(val)))
 
     @property
     def total_score(self) -> int:
