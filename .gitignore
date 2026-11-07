@@ -1,15 +1,39 @@
+# Python & Bytecode
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
 .pytest_cache/
+.coverage
+htmlcov/
 
-# Audio recordings
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Superpowers agent scratch
+.superpowers/
+
+# User Audio & Temporary Payloads (Private)
 records/*.wav
 records/*.mp3
 records/*.m4a
+records/*.ogg
+records/*.json
+!records/sample_standup.txt
 
 # Generated reports & dashboards
 reports/*.html
 reports/*.md
+!reports/.gitkeep
 
-# History data
+# User training history & data (Private)
 data/*.json
+!data/.gitkeep
