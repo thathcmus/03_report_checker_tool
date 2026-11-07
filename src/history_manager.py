@@ -48,7 +48,11 @@ class HistoryManager:
         return self._store
 
     def _save(self) -> None:
-        """Atomically persist current history store to disk."""
+        """Atomically persist current history store to disk.
+
+        Guarantees file handle is closed before any file replacement or cleanup
+        to prevent Windows PermissionError locks.
+        """
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         temp_file = tempfile.NamedTemporaryFile(
             dir=self.file_path.parent,
@@ -56,16 +60,20 @@ class HistoryManager:
             mode="w",
             encoding="utf-8",
         )
+        temp_path = Path(temp_file.name)
         try:
-            json.dump(self._store.to_dict(), temp_file, indent=2, ensure_ascii=False)
-            temp_file.flush()
-            os.fsync(temp_file.fileno())
-            temp_file.close()
-            os.replace(temp_file.name, self.file_path)
+            try:
+                json.dump(self._store.to_dict(), temp_file, indent=2, ensure_ascii=False)
+                temp_file.flush()
+                os.fsync(temp_file.fileno())
+            finally:
+                temp_file.close()
+
+            os.replace(temp_path, self.file_path)
         except Exception:
-            if os.path.exists(temp_file.name):
+            if temp_path.exists():
                 try:
-                    os.remove(temp_file.name)
+                    temp_path.unlink()
                 except OSError:
                     pass
             raise
@@ -87,7 +95,8 @@ class HistoryManager:
         """Calculate performance trends across historical standup sessions.
 
         Returns statistics including average score, recent 10 scores,
-        diff from previous session, and trend direction.
+        diff from previous session (diff_from_previous), and trend direction
+        ('up', 'down', 'stable').
         """
         total_reports = len(self._store.reports)
         if total_reports == 0:
@@ -96,8 +105,9 @@ class HistoryManager:
                 "average_score": 0.0,
                 "recent_average": 0.0,
                 "last_10_scores": [],
+                "diff_from_previous": 0,
                 "score_diff": 0,
-                "trend_direction": "insufficient_data",
+                "trend_direction": "stable",
                 "category_averages": {},
             }
 
@@ -109,18 +119,18 @@ class HistoryManager:
         recent_average = round(sum(last_10_scores) / len(last_10_scores), 2)
 
         if total_reports >= 2:
-            score_diff = (
+            diff_from_previous = (
                 self._store.reports[-1].total_score - self._store.reports[-2].total_score
             )
-            if score_diff > 0:
-                trend_direction = "improving"
-            elif score_diff < 0:
-                trend_direction = "declining"
+            if diff_from_previous > 0:
+                trend_direction = "up"
+            elif diff_from_previous < 0:
+                trend_direction = "down"
             else:
                 trend_direction = "stable"
         else:
-            score_diff = 0
-            trend_direction = "neutral"
+            diff_from_previous = 0
+            trend_direction = "stable"
 
         # Rubric category averages across all sessions
         category_averages: dict[str, float] = {}
@@ -141,7 +151,8 @@ class HistoryManager:
             "average_score": average_score,
             "recent_average": recent_average,
             "last_10_scores": last_10_scores,
-            "score_diff": score_diff,
+            "diff_from_previous": diff_from_previous,
+            "score_diff": diff_from_previous,
             "trend_direction": trend_direction,
             "category_averages": category_averages,
         }

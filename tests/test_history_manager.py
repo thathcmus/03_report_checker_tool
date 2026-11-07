@@ -1,5 +1,7 @@
-import pytest
+import json
 from pathlib import Path
+from unittest.mock import patch
+import pytest
 from src.models import RubricScores, StandupReport
 from src.history_manager import HistoryManager
 
@@ -69,8 +71,9 @@ def test_calculate_trend_empty(tmp_path):
     assert trend["total_reports"] == 0
     assert trend["average_score"] == 0.0
     assert trend["last_10_scores"] == []
+    assert trend["diff_from_previous"] == 0
     assert trend["score_diff"] == 0
-    assert trend["trend_direction"] in ("neutral", "stable", "insufficient_data")
+    assert trend["trend_direction"] == "stable"
 
 
 def test_calculate_trend_single_report(tmp_path):
@@ -86,7 +89,8 @@ def test_calculate_trend_single_report(tmp_path):
     assert trend["total_reports"] == 1
     assert trend["average_score"] == 70.0
     assert trend["last_10_scores"] == [70]
-    assert trend["score_diff"] == 0
+    assert trend["diff_from_previous"] == 0
+    assert trend["trend_direction"] == "stable"
 
 
 def test_calculate_trend_diff_and_direction(tmp_path):
@@ -95,26 +99,29 @@ def test_calculate_trend_diff_and_direction(tmp_path):
 
     # First report: total = 50
     manager.add_report(StandupReport(id="rep-1", scores=RubricScores(10, 10, 5, 10, 10, 5)))
-    # Second report: total = 70 (improving)
+    # Second report: total = 70 (up)
     manager.add_report(StandupReport(id="rep-2", scores=RubricScores(15, 15, 10, 10, 10, 10)))
 
     trend1 = manager.calculate_trend()
     assert trend1["total_reports"] == 2
+    assert trend1["diff_from_previous"] == 20
     assert trend1["score_diff"] == 20
-    assert trend1["trend_direction"] == "improving"
+    assert trend1["trend_direction"] == "up"
     assert trend1["average_score"] == 60.0
 
-    # Third report: total = 60 (declining)
+    # Third report: total = 60 (down)
     manager.add_report(StandupReport(id="rep-3", scores=RubricScores(10, 15, 10, 10, 10, 5)))
     trend2 = manager.calculate_trend()
     assert trend2["total_reports"] == 3
+    assert trend2["diff_from_previous"] == -10
     assert trend2["score_diff"] == -10
-    assert trend2["trend_direction"] == "declining"
+    assert trend2["trend_direction"] == "down"
 
     # Fourth report: total = 60 (stable)
     manager.add_report(StandupReport(id="rep-4", scores=RubricScores(10, 15, 10, 10, 10, 5)))
     trend3 = manager.calculate_trend()
     assert trend3["total_reports"] == 4
+    assert trend3["diff_from_previous"] == 0
     assert trend3["score_diff"] == 0
     assert trend3["trend_direction"] == "stable"
 
@@ -126,3 +133,16 @@ def test_history_manager_corrupted_file(tmp_path):
 
     manager = HistoryManager(file_path=history_file)
     assert manager.get_recent_reports() == []
+
+
+def test_save_error_cleans_up_temp_file(tmp_path):
+    history_file = tmp_path / "data" / "standup_history.json"
+    manager = HistoryManager(file_path=history_file)
+
+    with patch("json.dump", side_effect=IOError("Simulated disk error")):
+        with pytest.raises(IOError):
+            manager.add_report(StandupReport(id="rep-err"))
+
+    # Assert no leftover temporary files in data folder
+    temp_files = list(history_file.parent.glob("tmp*"))
+    assert len(temp_files) == 0
