@@ -1,0 +1,76 @@
+# StandupCoach - Sample Transcripts & Test Fixtures
+# ==============================================================================
+# Tài liệu các kịch bản báo cáo Daily Standup thực tế phục vụ kiểm thử và tham khảo.
+# Mỗi kịch bản mô phỏng tình huống thực tế của kỹ sư phần mềm Việt Nam với các thuật ngữ
+# Jira và công nghệ thông tin chuẩn mực.
+# ==============================================================================
+
+---
+### SAMPLE 1: BÁO CÁO MẪU XUẤT SẮC (Dự kiến: 95/100)
+**Tình huống:** Báo cáo trơn tru, đầy đủ 6 bước, share màn hình Jira, không có blocker, tốc độ nói chuẩn, không từ đệm.
+**Transcript:**
+"Chào cả nhà và anh Tuấn Scrum Master. Em xin phép chia sẻ màn hình Jira ticket PROJ-104 về tính năng Export hóa đơn PDF.
+Hôm qua em đã hoàn thành xong phần backend API tạo template PDF, viết đầy đủ unit test đạt 90% coverage và đã tạo PR số 45.
+Hôm nay em sẽ phối hợp với bạn frontend để ghép API và hỗ trợ QA kiểm thử trên môi trường staging.
+Về blocker, hiện tại luồng của em chạy trơn tru, không có blocker nào.
+Em đã báo cáo xong phần của mình, mời anh Nam tiếp tục ạ."
+
+**Đặc điểm kỹ thuật:**
+- Thời lượng: ~45 giây
+- Tốc độ: ~135 WPM
+- Từ đệm: 0
+- Câu chốt chuyển giao: Có ("Em đã báo cáo xong phần của mình, mời anh Nam tiếp tục ạ.")
+- Đánh giá: Đạt chuẩn xuất sắc.
+
+---
+### SAMPLE 2: BÁO CÁO CÓ BLOCKER & XỬ LÝ Q&A NGẮN GỌN (Dự kiến: 90/100)
+**Tình huống:** Kỹ sư gặp blocker hạ tầng AWS, nêu rõ người cần phối hợp, trả lời câu hỏi nhanh của Scrum Master, kết thúc dứt khoát.
+**Transcript:**
+"Chào mọi người. Trên màn hình em đang mở ticket AUTH-205 về tích hợp OAuth2 Google và Microsoft.
+Về việc hôm qua, em đã dựng xong service xác thực SSO trên local và test thông luồng cấp token JWT thành công.
+Hôm nay kế hoạch của em là triển khai lên cụm dev để test end-to-end.
+Tuy nhiên em đang gặp một blocker: Em chưa có quyền IAM policy để tạo secret key trên AWS Parameter Store môi trường Dev. Em đã tag anh Hoàng DevOps trên Jira, nhờ anh Hoàng duyệt cấp quyền giúp em sáng nay để em deploy ạ.
+- [Scrum Master hỏi: 'Nếu anh Hoàng duyệt trước 10h thì chiều nay có kịp test không em?']
+- [Phản hồi: 'Dạ kịp anh, em chỉ mất 30 phút deploy là bên test có thể vào kiểm thử được ngay ạ.']
+Dạ em xin kết thúc phần report, mời bạn Mai bên frontend report tiếp nhé."
+
+**Đặc điểm kỹ thuật:**
+- Thời lượng: ~65 giây
+- Tốc độ: ~140 WPM
+- Từ đệm: 1 ("Dạ")
+- Câu chốt chuyển giao: Có ("Dạ em xin kết thúc phần report, mời bạn Mai bên frontend report tiếp nhé.")
+- Đánh giá: Rất tốt, nêu rõ blocker và người phụ trách giải quyết, Q&A súc tích.
+
+---
+### SAMPLE 3: BÁO CÁO THIẾU CÂU CHỐT CHUYỂN GIAO (Dự kiến: 75/100)
+**Tình huống:** Báo cáo khá rõ ràng nhưng quên câu chốt chuyển giao, làm cuộc họp bị ngắt quãng vài giây do team không biết đã xong hay chưa. Có vài từ đệm nhẹ.
+**Transcript:**
+"Chào anh em. Em đang share ticket ORDER-312 về sửa lỗi tính sai phí vận chuyển.
+Hôm qua em đã reproduce được bug trên môi trường test, nguyên nhân do cache Redis chưa được clear khi đổi địa chỉ giao hàng. Em đã fix xong logic và push code lên branch bugfix.
+Hôm nay em sẽ theo dõi pipeline CI/CD và nhờ anh Tuấn review PR.
+À... về blocker thì... em không có blocker nào.
+[Im lặng ngập ngừng 5 giây, không có câu chốt kết thúc khiến Scrum Master phải hỏi: 'Hết chưa em?']"
+
+**Đặc điểm kỹ thuật:**
+- Thời lượng: ~50 giây
+- Tốc độ: ~125 WPM
+- Từ đệm: 2 ("À...", "thì...")
+- Câu chốt chuyển giao: Thiếu (Dừng đột ngột)
+- Đánh giá: Bị trừ điểm quy trình và tính chuyên nghiệp do thiếu câu chốt chuyển giao.
+
+---
+### SAMPLE 4: BÁO CÁO LAN MAN, NHIỀU LỖI CẦN CẢI THIỆN (Dự kiến: 50/100)
+**Tình huống:** Kể lể tiểu tiết mã nguồn, không share Jira, đầy từ đệm ngập ngừng, nói quá chậm, không câu chốt.
+**Transcript:**
+"Ờ... thì hôm qua em có ngồi xem cái code của ông Huy viết đợt trước... ờ... cái file UserRepository với cả AuthController ấy. Xong rồi em thấy nó cứ bị lỗi null pointer khi mà user không có email, em ngồi debug mất nguyên một buổi chiều từ dòng 150 đến dòng 200... ừm... rồi em sửa bằng cách thêm if else kiểm tra null.
+Hôm nay thì... ờ... kiểu như chắc em cũng ngồi xem tiếp mấy cái controller khác xem có lỗi tương tự không, nói chung cũng chưa biết có xong trong hôm nay không nữa.
+Còn blocker thì... chắc là máy tính của em hơi chậm thôi chứ không có gì.
+Ờ..."
+
+**Đặc điểm kỹ thuật:**
+- Thời lượng: ~90 giây
+- Tốc độ: ~95 WPM (quá chậm, lê thê)
+- Từ đệm: 9 ("Ờ...", "thì...", "ừm...", "kiểu như...", "chắc là...", "nói chung...")
+- Câu chốt chuyển giao: Hoàn toàn không có
+- Tham chiếu Jira: Không có
+- Đánh giá: Cần chấn chỉnh toàn diện. Điểm yếu lớn về tính súc tích, chuyên nghiệp và quy trình Agile.

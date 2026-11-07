@@ -133,8 +133,8 @@ class DashboardGenerator:
         # Audio quality diagnosis alert
         audio_alert_type = (
             "WARNING"
-            if (vol_label.lower() in ("too quiet", "clipping", "noisy", "too noisy")
-                or noise_label.lower() in ("noisy", "too noisy"))
+            if (vol_label.lower().replace("_", " ") in ("too quiet", "clipping", "noisy", "too noisy")
+                or noise_label.lower().replace("_", " ") in ("noisy", "too noisy"))
             else "NOTE"
         )
 
